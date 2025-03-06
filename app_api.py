@@ -9,6 +9,11 @@ import numpy as np
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -29,59 +34,84 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Global variables for models
+pytorch_model = None
+keras_model = None
+
 # Model loading from Hugging Face Hub
 def load_models():
+    global pytorch_model, keras_model
+    
     try:
+        # Get environment variables
+        model_repo = os.getenv('MODEL_REPO', 'eressss/EYEAI')
+        pytorch_model_name = os.getenv('PYTORCH_MODEL', 'model_epoch26_acc94.76.pt')
+        keras_model_name = os.getenv('KERAS_MODEL', 'model_after_testing.keras')
+        
+        logger.info(f"Loading models from repository: {model_repo}")
+        
         # Download models from Hugging Face Hub
         pytorch_path = hf_hub_download(
-            repo_id="eressss/EYEAI",
-            filename="model_epoch26_acc94.76.pt",
+            repo_id=model_repo,
+            filename=pytorch_model_name,
             token=os.getenv('HF_TOKEN')
         )
+        logger.info(f"Downloaded PyTorch model to: {pytorch_path}")
+        
         keras_path = hf_hub_download(
-            repo_id="eressss/EYEAI",
-            filename="model_after_testing.keras",
+            repo_id=model_repo,
+            filename=keras_model_name,
             token=os.getenv('HF_TOKEN')
         )
+        logger.info(f"Downloaded Keras model to: {keras_path}")
         
         # Load models
         pytorch_model = torch.load(pytorch_path, map_location=torch.device('cpu'))
-        keras_model = tf.keras.models.load_model(keras_path)
-        
         pytorch_model.eval()
-        return pytorch_model, keras_model
+        logger.info("PyTorch model loaded successfully")
+        
+        keras_model = tf.keras.models.load_model(keras_path)
+        logger.info("Keras model loaded successfully")
+        
+        return True
     except Exception as e:
-        print(f"Error loading models: {e}")
-        return None, None
-
-# Load models at startup
-pytorch_model, keras_model = load_models()
+        logger.error(f"Error loading models: {str(e)}")
+        return False
 
 def preprocess_image(image_bytes, target_size=(224, 224)):
-    # Open image
-    image = Image.open(io.BytesIO(image_bytes))
-    
-    # Convert to RGB if needed
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
-    
-    # Resize
-    image = image.resize(target_size)
-    
-    # Convert to numpy array
-    image_array = np.array(image)
-    
-    # Normalize
-    image_array = image_array / 255.0
-    
-    return image_array
+    try:
+        # Open image
+        image = Image.open(io.BytesIO(image_bytes))
+        
+        # Convert to RGB if needed
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        # Resize
+        image = image.resize(target_size)
+        
+        # Convert to numpy array
+        image_array = np.array(image)
+        
+        # Normalize
+        image_array = image_array / 255.0
+        
+        return image_array
+    except Exception as e:
+        logger.error(f"Error preprocessing image: {str(e)}")
+        raise HTTPException(status_code=400, detail="Could not process the image")
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     try:
         # Check if models are loaded
         if pytorch_model is None or keras_model is None:
-            raise HTTPException(status_code=500, detail="Models not loaded properly")
+            success = load_models()
+            if not success:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Could not load models. Please try again later."
+                )
             
         # Read and preprocess image
         image_bytes = await file.read()
@@ -112,20 +142,35 @@ async def predict(file: UploadFile = File(...)):
             }
         }
     except Exception as e:
+        logger.error(f"Error during prediction: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/health")
 async def health_check():
+    if pytorch_model is None or keras_model is None:
+        success = load_models()
+        if not success:
+            return {
+                "status": "unhealthy",
+                "message": "Models not loaded",
+                "models_loaded": False
+            }
+    
     return {
         "status": "healthy",
-        "models_loaded": pytorch_model is not None and keras_model is not None
+        "models_loaded": True,
+        "pytorch_model": "loaded",
+        "keras_model": "loaded"
     }
 
 @app.get("/")
 async def root():
     return {
         "message": "Welcome to EyeAI API",
-        "docs_url": "/docs",
-        "health_check": "/health",
-        "predict_endpoint": "/predict"
+        "version": "1.0.0",
+        "endpoints": {
+            "docs": "/docs",
+            "health": "/health",
+            "predict": "/predict"
+        }
     }

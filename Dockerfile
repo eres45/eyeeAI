@@ -18,14 +18,21 @@ ENV PATH="/home/user/.local/bin:$PATH"
 WORKDIR /app
 
 # Copy dependencies and install them
-COPY --chown=user ./requirements.txt requirements.txt
+COPY --chown=user requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# Copy all files into the container
-COPY --chown=user . /app
+# Copy the rest of the application
+COPY --chown=user . .
 
-# Expose port 7860 (required by Hugging Face)
+# Set environment variables
+ENV FLASK_ENV=development
+ENV FLASK_DEBUG=1
+ENV MODEL_REPO=eressss/EYEAI
+ENV PYTORCH_MODEL=model_epoch26_acc94.76.pt
+ENV KERAS_MODEL=model_after_testing.keras
+
+# Expose the port
 EXPOSE 7860
 
-# Run FastAPI app
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
+# Run the application
+CMD ["uvicorn", "app_api:app", "--host", "0.0.0.0", "--port", "7860"]
