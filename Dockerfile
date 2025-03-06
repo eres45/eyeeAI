@@ -35,4 +35,4 @@ ENV KERAS_MODEL=model_after_testing.keras
 EXPOSE 7860
 
 # Run the application
-CMD ["uvicorn", "app_api:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860", "--log-level", "info"]

@@ -6,6 +6,8 @@ colorTo: purple
 sdk: docker
 app_port: 7860
 pinned: false
+license: mit
+app_file: app_api.py
 ---
 
 # Eye Flu Detection System
