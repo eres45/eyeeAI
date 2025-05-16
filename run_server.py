@@ -409,6 +409,12 @@ def analyze_eye():
 def open_browser():
     webbrowser.open_new('http://localhost:5700/')
 
+# Add CORS support to allow API requests
+from flask_cors import CORS
+
+# Enable CORS for the app
+CORS(app)
+
 if __name__ == '__main__':
     print("Starting EyeAI Diagnostic Platform...")
     

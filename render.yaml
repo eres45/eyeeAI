@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: eyeai-diagnostic-platform
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run_server:app
+    envVars:
+      - key: RENDER
+        value: "true"
+      - key: GEMINI_API_KEY
+        sync: false
+    healthCheckPath: /
