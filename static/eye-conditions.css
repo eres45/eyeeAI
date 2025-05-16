@@ -1,0 +1,42 @@
+/* Eye condition styling for both chatbot and eye scan pages */
+
+/* Healthy Eye */
+.condition-name.normal {
+    color: #27AE60 !important; /* Green */
+}
+
+/* Eye Flu conditions */
+.condition-name.mild,
+.condition-name.moderate,
+.condition-name.severe,
+.condition-name.eye-flu {
+    color: #EB5757 !important; /* Red */
+}
+
+/* No Eye Detected */
+.condition-name.not-eye {
+    color: #F2994A !important; /* Orange */
+}
+
+/* Status badges */
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 10px;
+    color: white !important;
+    font-weight: bold;
+}
+
+/* Status badge colors */
+.status-badge.healthy {
+    background-color: #27AE60 !important; /* Green */
+}
+
+.status-badge.flu {
+    background-color: #EB5757 !important; /* Red */
+}
+
+.status-badge.no-eye {
+    background-color: #F2994A !important; /* Orange */
+}
