@@ -1,0 +1,12 @@
+# Ignore these files during Render deployment
+build.sh
+start.sh
+EYEFLU/
+netlify-static/
+netlify_deploy/
+uploads/
+temp_reports/
+*.pyc
+__pycache__/
+.env
+.env.local

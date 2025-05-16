@@ -3,8 +3,8 @@ services:
     name: eyeai-diagnostic-platform
     env: python
     runtime: python3
-    buildCommand: chmod +x build.sh && ./build.sh
-    startCommand: chmod +x start.sh && ./start.sh
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --workers=4 --timeout=120 run_server:app
     envVars:
       - key: RENDER
         value: "true"

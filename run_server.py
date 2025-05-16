@@ -415,6 +415,15 @@ from flask_cors import CORS
 # Enable CORS for the app
 CORS(app)
 
+# Add basic error handling for production
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify(error=str(e)), 500
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify(error="The requested resource was not found"), 404
+
 if __name__ == '__main__':
     print("Starting EyeAI Diagnostic Platform...")
     
